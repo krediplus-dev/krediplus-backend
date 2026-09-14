@@ -1,0 +1,22 @@
+KREDI+ BACKEND 1.3.9 - RAILWAY
+
+1. Sube este proyecto al repositorio conectado a Railway.
+2. En Railway agrega:
+   EMAIL_RECOVERY_ENABLED=true
+   RESEND_API_KEY=<tu clave de Resend>
+   MAIL_FROM_NAME=Kredi+
+   MAIL_FROM_ADDRESS=no-reply@krediplus.org
+3. Mantén DATABASE_URL, JWT_SECRET, PUBLIC_BASE_URL y UPLOAD_DIR=/data/uploads.
+4. Verifica krediplus.org en Resend antes de probar correos reales.
+5. Redeploy y prueba Recuperar contraseña desde la APK.
+
+El backend prioriza la API HTTPS de Resend. SMTP queda como respaldo y no es necesario en Railway cuando RESEND_API_KEY está configurada.
+
+CORRECCION 1.3.7 - HTTP 503 QR / p.image_path
+------------------------------------------------
+- Railway confirmó SQLSTATE 42703: column p.image_path does not exist.
+- productos no tiene image_path; las imágenes de productos se guardan en productos_jornada.image_path.
+- AppService.commercialQrOfferDto ya usa la misma fuente de imagen que el catálogo normal.
+- No hace falta alterar manualmente PostgreSQL ni crear una columna image_path en productos.
+- Sube ESTE backend al repositorio conectado krediplus-dev/krediplus-backend y espera el redeploy Healthy.
+- Después abre Jornadas, combos y QR y pulsa Actualizar.

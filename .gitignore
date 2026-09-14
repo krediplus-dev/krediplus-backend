@@ -1,0 +1,20 @@
+.gradle/
+.qa-runtime/
+build/
+.idea/
+*.iml
+*.log
+*.zip
+*.jar
+.env
+.env.*
+!.env.example
+service-account.json
+**/service-account.json
+runtime/
+backups/
+uploads/
+data/
+
+# Gradle Wrapper: este JAR debe versionarse para que el builder cloud pueda ejecutar ./gradlew
+!gradle/wrapper/gradle-wrapper.jar

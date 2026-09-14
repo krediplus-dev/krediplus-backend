@@ -1,0 +1,365 @@
+openapi: 3.1.0
+info:
+  title: Kredi+ Backend API
+  version: 1.3.9
+  description: API de Kredi+ para línea de compra, cuotas, conciliación y compras presenciales por QR; sin billetera ni custodia de fondos.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      security: []
+      summary: Estado detallado de la API
+      responses:
+        "200":
+          description: Servicio disponible
+  /banners:
+    get:
+      summary: Banners activos del inicio
+      responses:
+        "200":
+          description: Carrusel publicitario ordenado y vigente
+  /admin/banners:
+    post:
+      summary: Crear un banner del inicio
+      responses:
+        "201":
+          description: Banner creado
+  /admin/banners/{id}:
+    put:
+      summary: Editar un banner
+      parameters:
+        - $ref: "#/components/parameters/EntityId"
+      responses:
+        "200":
+          description: Banner actualizado
+    delete:
+      summary: Retirar un banner
+      parameters:
+        - $ref: "#/components/parameters/EntityId"
+      responses:
+        "200":
+          description: Banner retirado
+  /admin/banners/{id}/image:
+    post:
+      summary: Subir o reemplazar la imagen de un banner
+      parameters:
+        - $ref: "#/components/parameters/EntityId"
+      responses:
+        "200":
+          description: Imagen actualizada
+  /promotions:
+    get:
+      summary: Promociones vigentes o listado completo para roles autorizados
+      responses:
+        "200":
+          description: Promociones disponibles
+  /promotions/insights:
+    get:
+      summary: Impacto comercial de promociones
+      responses:
+        "200":
+          description: Venta bruta, descuentos y venta neta
+  /admin/promotions:
+    post:
+      summary: Crear una promoción o descuento
+      responses:
+        "201":
+          description: Promoción creada
+  /admin/promotions/{id}:
+    put:
+      summary: Editar una promoción
+      parameters:
+        - $ref: "#/components/parameters/EntityId"
+      responses:
+        "200":
+          description: Promoción actualizada
+  /admin/promotions/{id}/status:
+    put:
+      summary: Activar o desactivar una promoción
+      parameters:
+        - $ref: "#/components/parameters/EntityId"
+      responses:
+        "200":
+          description: Estado actualizado
+  /me/profile:
+    patch:
+      summary: Bloqueado - datos personales, teléfono y ubicación son de solo consulta
+      responses:
+        "403":
+          description: Edición no permitida desde la aplicación
+  /me/profile/contact:
+    patch:
+      summary: Bloqueado - teléfono de solo consulta
+      responses:
+        "403":
+          description: El teléfono no puede modificarse desde la aplicación
+  /me/profile/location:
+    patch:
+      summary: Bloqueado - ubicación de solo consulta
+      responses:
+        "403":
+          description: La ubicación no puede modificarse desde la aplicación
+  /me/email-change/request:
+    post:
+      summary: Enviar código al nuevo correo
+      responses:
+        "200":
+          description: Código enviado
+  /me/email-change/confirm:
+    post:
+      summary: Confirmar código y activar el nuevo correo
+      responses:
+        "200":
+          description: Correo actualizado y verificado
+  /me/app-experience-survey:
+    post:
+      summary: Registrar encuesta rápida de experiencia
+      responses:
+        "200":
+          description: Encuesta registrada
+  /ratings/app-experience:
+    get:
+      summary: Métricas agregadas de experiencia de la app
+      responses:
+        "200":
+          description: Métricas de registro, navegación y claridad de pagos
+  /qr/scan:
+    post:
+      summary: Iniciar compra presencial escaneando el QR de una caja Kredi+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+      responses:
+        "201":
+          description: Sesión QR iniciada
+  /me/qr-purchases:
+    get:
+      summary: Compras presenciales QR completadas del usuario autenticado
+      responses:
+        "200":
+          description: Historial de compras QR
+  /qr/sessions/{id}:
+    get:
+      summary: Estado actual de una sesión QR del usuario
+      parameters:
+        - $ref: "#/components/parameters/EntityId"
+      responses:
+        "200":
+          description: Sesión de compra
+  /qr/sessions/{id}/confirm:
+    post:
+      summary: Confirmar el plan calculado para una compra QR
+      parameters:
+        - $ref: "#/components/parameters/EntityId"
+      responses:
+        "200":
+          description: Plan confirmado; la sesión queda esperando la inicial directa al comercio
+  /admin/businesses:
+    get:
+      summary: Listar negocios asociados
+      responses:
+        "200":
+          description: Negocios registrados
+    post:
+      summary: Registrar un negocio asociado
+      responses:
+        "201":
+          description: Negocio registrado
+  /admin/qr/terminals:
+    get:
+      summary: Listar cajas QR por negocio y sucursal
+      responses:
+        "200":
+          description: Cajas QR disponibles
+    post:
+      summary: Crear una caja QR persistente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QrTerminalCreateRequest"
+      responses:
+        "201":
+          description: Caja QR creada
+  /admin/qr/terminals/{id}/status:
+    post:
+      summary: Activar o desactivar una caja QR
+      parameters:
+        - $ref: "#/components/parameters/EntityId"
+      responses:
+        "200":
+          description: Estado de la caja actualizado
+  /admin/qr/sessions:
+    get:
+      summary: Cola de compras QR para caja/administración
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [AWAITING_MERCHANT, AWAITING_CUSTOMER, AWAITING_INITIAL, COMPLETED, CANCELLED, EXPIRED]
+      responses:
+        "200":
+          description: Sesiones QR
+  /admin/qr/sessions/{id}/quote:
+    post:
+      summary: Definir el total y calcular automáticamente inicial y cuotas
+      parameters:
+        - $ref: "#/components/parameters/EntityId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QrSaleQuoteRequest"
+      responses:
+        "200":
+          description: Plan calculado y enviado al cliente para confirmación
+  /admin/qr/sessions/{id}/initial-received:
+    post:
+      summary: Confirmar que el comercio recibió directamente la inicial
+      parameters:
+        - $ref: "#/components/parameters/EntityId"
+      responses:
+        "200":
+          description: Compra completada y cuotas activadas
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    EntityId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+  schemas:
+    QrTerminalCreateRequest:
+      type: object
+      required: [businessId, branchName, terminalName]
+      properties:
+        businessId:
+          type: integer
+          format: int64
+        branchName:
+          type: string
+        terminalName:
+          type: string
+    QrSaleQuoteRequest:
+      type: object
+      required: [totalUsd]
+      properties:
+        totalUsd:
+          type: number
+          minimum: 0.01
+        invoiceReference:
+          type: string
+    CostCategory:
+      type: object
+      required: [id, code, name, group, level, movementAllowed, children]
+      properties:
+        id: { type: integer, format: int64 }
+        code: { type: string, example: OP-DELIVERY }
+        name: { type: string, example: Delivery de última milla }
+        group:
+          type: string
+          enum: [INVENTORY, OPERATING, ADMINISTRATIVE, COMMERCIAL, FINANCIAL, EXTRAORDINARY]
+        level: { type: integer, minimum: 1, maximum: 3 }
+        movementAllowed: { type: boolean }
+        receiptRequired: { type: boolean }
+        approvalRequired: { type: boolean }
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/CostCategory"
+    CostCenterRequest:
+      type: object
+      required: [code, name, type]
+      properties:
+        code: { type: string, example: LOGISTICA }
+        name: { type: string, example: Logística central }
+        type:
+          type: string
+          enum: [CENTRAL, WAREHOUSE, LOGISTICS, MARKETING, TECHNOLOGY, JOURNEY, BRANCH, ADMINISTRATOR, PROJECT, OTHER]
+        parentId: { type: integer, format: int64 }
+        responsibleUserId: { type: integer, format: int64 }
+    BudgetPeriodRequest:
+      type: object
+      required: [code, name, startDate, endDate]
+      properties:
+        code: { type: string, example: "2026-09" }
+        name: { type: string, example: Septiembre 2026 }
+        startDate: { type: string, format: date }
+        endDate: { type: string, format: date }
+        currency: { type: string, enum: [USD, VES], default: USD }
+    BudgetLineRequest:
+      type: object
+      required: [periodId, categoryId, costCenterId, approvedUsd]
+      properties:
+        periodId: { type: integer, format: int64 }
+        categoryId: { type: integer, format: int64 }
+        costCenterId: { type: integer, format: int64 }
+        approvedUsd: { type: number, minimum: 0 }
+        notes: { type: string, maxLength: 500 }
+    BudgetCommitmentRequest:
+      type: object
+      required: [budgetLineId, amountUsd, description]
+      properties:
+        budgetLineId: { type: integer, format: int64 }
+        amountUsd: { type: number, exclusiveMinimum: 0 }
+        description: { type: string }
+        supplier: { type: string }
+        invoiceNumber: { type: string }
+        expectedPaymentDate: { type: string, format: date }
+        idempotencyKey: { type: string }
+    BudgetAdjustmentRequest:
+      type: object
+      required: [type, amountUsd, reason]
+      properties:
+        type: { type: string, enum: [INCREASE, REDUCTION, TRANSFER] }
+        sourceLineId: { type: integer, format: int64 }
+        destinationLineId: { type: integer, format: int64 }
+        amountUsd: { type: number, exclusiveMinimum: 0 }
+        reason: { type: string }
+        idempotencyKey: { type: string }
+    BudgetMovementRequest:
+      type: object
+      required: [type, amountUsd]
+      properties:
+        type:
+          type: string
+          enum: [BANK_INCOME, INVENTORY_COST, OPERATING_EXPENSE, ADMINISTRATIVE_EXPENSE, COMMERCIAL_EXPENSE, FINANCIAL_EXPENSE, EXTRAORDINARY_EXPENSE, RESERVE, RELEASE, ADJUSTMENT_CREDIT, ADJUSTMENT_DEBIT]
+        amountUsd: { type: number, exclusiveMinimum: 0 }
+        description: { type: string }
+        costCategoryCode: { type: string }
+        costCenterId: { type: integer, format: int64 }
+        budgetPeriodId: { type: integer, format: int64 }
+        budgetLineId: { type: integer, format: int64 }
+        commitmentId: { type: integer, format: int64 }
+        responsibleUserId: { type: integer, format: int64 }
+        supplier: { type: string }
+        invoiceNumber: { type: string }
+        transactionDate: { type: string, format: date }
+        paymentMethod: { type: string }
+        costBehavior: { type: string, enum: [FIXED, VARIABLE] }
+        recurrence: { type: string, enum: [ONE_TIME, WEEKLY, MONTHLY, QUARTERLY, ANNUAL] }
+        projectReference: { type: string }
+        receiptPath: { type: string }
+        originalCurrency: { type: string, enum: [USD, VES], default: USD }
+        originalAmount: { type: number, exclusiveMinimum: 0 }
+        idempotencyKey: { type: string }
